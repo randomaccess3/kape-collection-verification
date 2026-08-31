@@ -1,6 +1,6 @@
 # KAPE Collection Verification
 
-`Test-KapeCollection.ps1` compares a mounted or extracted KAPE collection with
+`Verify-KapeCollection.ps1` compares a mounted or extracted KAPE collection with
 its `CopyLog.csv` in both directions. It reports missing files, unlogged files,
 invalid mappings, duplicate log entries, and altered KAPE long-path sidecars.
 It supports collections stored at a drive root or in any directory.
@@ -10,19 +10,19 @@ It supports collections stored at a drive root or in any directory.
 Show help:
 
 ```powershell
-.\Test-KapeCollection.ps1 -h
+.\Verify-KapeCollection.ps1 -h
 ```
 
 Run an inventory-only comparison:
 
 ```powershell
-.\Test-KapeCollection.ps1 -d D:\
+.\Verify-KapeCollection.ps1 -d D:\
 ```
 
 Run all metadata checks:
 
 ```powershell
-.\Test-KapeCollection.ps1 -d "C:\temp\collection" -VerifyMetadata
+.\Verify-KapeCollection.ps1 -d "C:\temp\collection" -VerifyMetadata
 ```
 
 Available verification modes:

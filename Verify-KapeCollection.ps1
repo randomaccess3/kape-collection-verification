@@ -45,10 +45,10 @@ as are timestamps for the NTFS $Boot and $LogFile metadata files.
 Prints basic usage and the available arguments.
 
 .EXAMPLE
-.\Test-KapeCollection.ps1 -d D:\
+.\Verify-KapeCollection.ps1 -d D:\
 
 .EXAMPLE
-.\Test-KapeCollection.ps1 -d C:\temp\t -VerifyMetadata
+.\Verify-KapeCollection.ps1 -d C:\temp\t -VerifyMetadata
 
 .NOTES
 Exit code 0 means the collection is consistent, 1 means integrity findings
@@ -87,8 +87,8 @@ if ($Help) {
 KAPE Collection Verification
 
 Usage:
-  .\Test-KapeCollection.ps1 -d <directory> [options]
-  .\Test-KapeCollection.ps1 -h
+  .\Verify-KapeCollection.ps1 -d <directory> [options]
+  .\Verify-KapeCollection.ps1 -h
 
 Arguments:
   -Directory, -d <path>   KAPE collection root directory (required).
