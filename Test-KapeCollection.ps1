@@ -5,10 +5,10 @@ Verifies a mounted KAPE collection against its CopyLog.
 .DESCRIPTION
 Checks both directions: every CopyLog entry must exist with the recorded size,
 and every file below the collection directory must have a CopyLog entry.
-CopyLog and SkipLog files located directly in the collection directory are
-excluded from the collected-file inventory. Its System Volume Information and
-$RECYCLE.BIN directories are also excluded because they belong to the mounted
-volume rather than the collection.
+CopyLog, SkipLog, and ConsoleLog files located directly in the collection
+directory are excluded from the collected-file inventory. Its System Volume
+Information and $RECYCLE.BIN directories are also excluded because they belong
+to the mounted volume rather than the collection.
 
 The temporary KAPE target root is inferred by correlating SourceFile and
 DestinationFile. That prefix is then removed from every DestinationFile. This
@@ -41,6 +41,9 @@ Compares each file's creation and modification UTC timestamps with CreatedOnUtc
 and ModifiedOnUtc in the CopyLog. LastAccessedOnUtc is intentionally ignored,
 as are timestamps for the NTFS $Boot and $LogFile metadata files.
 
+.PARAMETER Help
+Prints basic usage and the available arguments.
+
 .EXAMPLE
 .\Test-KapeCollection.ps1 -d D:\
 
@@ -51,29 +54,56 @@ as are timestamps for the NTFS $Boot and $LogFile metadata files.
 Exit code 0 means the collection is consistent, 1 means integrity findings
 were detected, and 2 means verification could not be completed.
 #>
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName = 'Verify')]
 param(
-    [Parameter(Mandatory = $true, Position = 0)]
+    [Parameter(Mandatory = $true, Position = 0, ParameterSetName = 'Verify')]
     [Alias('d')]
     [ValidateNotNullOrEmpty()]
     [string]$Directory,
 
-    [Parameter()]
+    [Parameter(ParameterSetName = 'Verify')]
     [ValidateNotNullOrEmpty()]
     [string]$CopyLogPath,
 
-    [Parameter()]
+    [Parameter(ParameterSetName = 'Verify')]
     [switch]$VerifyMetadata,
 
-    [Parameter()]
+    [Parameter(ParameterSetName = 'Verify')]
     [switch]$VerifyHashes,
 
-    [Parameter()]
-    [switch]$VerifyTimestamps
+    [Parameter(ParameterSetName = 'Verify')]
+    [switch]$VerifyTimestamps,
+
+    [Parameter(Mandatory = $true, ParameterSetName = 'Help')]
+    [Alias('h')]
+    [switch]$Help
 )
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
+
+if ($Help) {
+    Write-Output @'
+KAPE Collection Verification
+
+Usage:
+  .\Test-KapeCollection.ps1 -d <directory> [options]
+  .\Test-KapeCollection.ps1 -h
+
+Arguments:
+  -Directory, -d <path>   KAPE collection root directory (required).
+  -CopyLogPath <path>     CopyLog CSV path. By default, the script locates
+                          exactly one *_CopyLog.csv in the collection root.
+  -VerifyMetadata         Verify file sizes, SHA-1 hashes, and timestamps.
+  -VerifyHashes           Verify SHA-1 hashes only.
+  -VerifyTimestamps       Verify creation and modification timestamps only.
+  -Help, -h               Print this help output.
+
+Without a verification flag, the script compares only the CopyLog and file
+inventory.
+'@
+    exit 0
+}
 
 $requiredColumns = @(
     'CopiedTimestamp',
@@ -107,6 +137,41 @@ function Add-Finding {
         Path    = $Path
         Details = $Details
     })
+}
+
+function Get-Sha1Hash {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    $fullPath = [IO.Path]::GetFullPath($Path)
+    if ($fullPath.StartsWith('\\')) {
+        $extendedPath = '\\?\UNC\' + $fullPath.TrimStart('\')
+    }
+    else {
+        $extendedPath = '\\?\' + $fullPath
+    }
+
+    $stream = New-Object IO.FileStream(
+        $extendedPath,
+        [IO.FileMode]::Open,
+        [IO.FileAccess]::Read,
+        (
+            [IO.FileShare]::ReadWrite -bor
+            [IO.FileShare]::Delete
+        )
+    )
+    $sha1 = [Security.Cryptography.SHA1]::Create()
+    try {
+        return [BitConverter]::ToString(
+            $sha1.ComputeHash($stream)
+        ).Replace('-', '')
+    }
+    finally {
+        $sha1.Dispose()
+        $stream.Dispose()
+    }
 }
 
 function Test-LoggedTimestamp {
@@ -409,7 +474,8 @@ try {
             (
                 $item.Name -like '*_CopyLog.csv' -or
                 $item.Name -like '*_SkipLog.csv' -or
-                $item.Name -like '*_SkipLog.csv.csv'
+                $item.Name -like '*_SkipLog.csv.csv' -or
+                $item.Name -like '*_ConsoleLog.txt'
             )
         )
         if ($isSelectedCopyLog -or $isRootKapeLog) {
@@ -602,7 +668,7 @@ try {
             }
             elseif (($actualItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -eq 0) {
                 try {
-                    $actualHash = (Get-FileHash -LiteralPath $expectedPath -Algorithm SHA1).Hash
+                    $actualHash = Get-Sha1Hash -Path $expectedPath
                     if (-not $actualHash.Equals(
                             $loggedHash,
                             [StringComparison]::OrdinalIgnoreCase
