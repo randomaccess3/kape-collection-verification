@@ -198,6 +198,22 @@ files may themselves have a read-only attribute; mutation tests cleared it only
 on the affected disposable payloads. Converted-folder VHD/VHDX coverage is also
 retained and labelled separately.
 
+Additional mounted-source testing exercised `$MFT` and `!BasicCollection`
+with and without `--vss`. Both simple collections passed all 55 clean/mutation
+checks each. Untouched compound collections had genuine CopyLog/payload
+discrepancies reproduced by both the original and enhanced verifier; they are
+not clean acquisitions. All 45 baseline-relative mutation checks per collection
+passed without changing those findings or rewriting logs. VSS added snapshot
+payloads but did not guarantee a clean integrity result.
+
+The verifier compares a collection with its CopyLog, not atomically with its
+live source. Independent post-acquisition source checks may encounter inaccessible
+raw NTFS streams or changing source views. Preserve snapshot identity and
+compare against that same snapshot, rather than treating expected live/snapshot
+differences as failures. See the local
+[KAPE target skill](.github/skills/kape-targets/SKILL.md) and
+[investigation next steps](docs/Local-Issue-Next-Steps.md).
+
 The CopyLog is a reference, not a signed trust anchor. SHA-1 is the implemented
 comparison algorithm, not modern collision-resistant authentication. Empty
 directories, excluded metadata/root artifacts, access timestamps, and every byte

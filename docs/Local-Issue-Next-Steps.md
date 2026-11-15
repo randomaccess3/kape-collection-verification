@@ -44,6 +44,34 @@ payload loss. KAPE also returned exit 0 for a rejected absolute target path, so
 future acquisition automation should validate actual output/logs, not exit
 status alone.
 
+## Additional mounted-source acquisition discrepancies
+
+Untouched `!BasicCollection` folder acquisitions exposed a live `$MFT`
+CopyLog/payload SHA-1 mismatch both with and without VSS. The non-VSS collection
+also had nine non-exempt size mismatches; ordinary accessible source lengths
+matched the collected lengths, not the logged lengths. Both original and
+enhanced verifiers reported the same baseline findings. Raw `$MFT` source
+streams were inaccessible through ordinary APIs, so the acquisition-time raw
+source hash is not independently established.
+
+Post-acquisition VSS compound source checks found 305 hash differences: four
+live-source paths and 301 correctly mapped same-snapshot paths. These were not
+comparisons of historical snapshots against the live drive. Bounded samples
+confirmed payload/log agreement but source disagreement. Some repeated source
+reads returned different hashes despite unchanged snapshot identities; the
+source view is not established as a stable acquisition-time oracle. These
+observations do not demonstrate tampering or a defect introduced by this
+verifier. Absolute acquisition failures remain separate from the passing
+baseline-relative mutation behavior.
+
+Next steps: preserve pristine collections, CopyLogs, exact source/snapshot
+mapping and repeated-read evidence; investigate the mounted-source provider's
+read stability; and, on a newly authorized disposable source copy, compare
+ordinary and raw reads using a validated independent reader before recollecting
+the affected small targets. Check enumeration-time versus copy-time sizes and
+deferred-copy versus later source-hash timing. Do not remount the user's source,
+change logs, weaken checks, or declare corruption to force an attribution.
+
 ## Missing long-name sidecars
 
 The existing verifier validates sidecars that are present. Deleting an unlogged
