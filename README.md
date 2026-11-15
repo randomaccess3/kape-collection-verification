@@ -183,12 +183,20 @@ Tests create an unused temporary directory and retain structured results,
 child-process arguments, stdout/stderr, and disposable fixtures there. An
 explicit `-TestRoot` must not exist already. The suite does not require KAPE or
 mount privileges. Real-acquisition validation also exercised KAPE 1.3.0.2
-Folder/native ZIP output and .NET ZIP extraction under PowerShell 7.6.3.
+Folder/native ZIP output, .NET ZIP extraction, and native VHD/VHDX collections
+under PowerShell 7.6.3.
 Windows PowerShell 5.1 is not part of this validation.
 
-Native tiny VHD/VHDX outputs in that environment attached without partitions or
-volumes, so they could not be verified as mounted collections. Converted-folder
-VHD and VHDX coverage must not be mistaken for native KAPE disk coverage.
+Native KAPE VHD and VHDX copies each passed 50 clean/mutation/restore checks
+across all five verification modes, plus five clean original-verifier baseline
+checks. These were normal read/write mounts of disposable copies, not original
+evidence. The earlier apparent absence of partitions/volumes was caused by the
+read-only mount procedure; it was not a native-container limitation. Do not
+repeat that procedure as a prerequisite to verification. Mount copies normally,
+verify their actual collection roots, and dismount them afterward. KAPE payload
+files may themselves have a read-only attribute; mutation tests cleared it only
+on the affected disposable payloads. Converted-folder VHD/VHDX coverage is also
+retained and labelled separately.
 
 The CopyLog is a reference, not a signed trust anchor. SHA-1 is the implemented
 comparison algorithm, not modern collision-resistant authentication. Empty

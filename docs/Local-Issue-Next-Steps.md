@@ -19,19 +19,22 @@ separately preserved original acquisition; and, only with explicit approval,
 design any future remapping feature with ambiguity detection. Do not silently
 rewrite log destinations or relax root inference to force a pass.
 
-## Native small KAPE VHD/VHDX preparation
+## Native KAPE disk preparation: resolved test-procedure error
 
 KAPE 1.3.0.2 reported successful native VHD and VHDX creation from the seven-file
-controlled target, but the resulting approximately 30 MB virtual disks attached
-without partitions or volumes. Native mounted-collection verification could
-not proceed. Converted-folder, formatted NTFS VHD/VHDX tests are separately
-labelled fallback coverage, not native KAPE coverage.
+controlled target. The original read-only mount procedure made those outputs
+appear to have no partitions/volumes. Following the user's correction, fresh
+copies mounted normally in read/write mode with NTFS volumes, without any disk
+initialization or formatting. Both native formats passed all 50 enhanced
+clean/mutation/restore checks and five original-verifier baseline modes each.
 
-Next steps: preserve acquisition and attachment diagnostics; independently
-inspect a disposable native image with suitable forensic tooling; reproduce
-with a larger controlled acquisition or another supported KAPE version; and
-determine whether this is a minimum-size, container-generation, or mount-tool
-compatibility problem. Do not initialize/format the native output to hide it.
+The earlier native-container limitation and suggested KAPE container-generation
+investigation are withdrawn. Preserve the initial diagnostics as provenance of
+the test-procedure error, not evidence that native KAPE output is unsupported.
+Use normal mounts of disposable copies in future tests, clear payload read-only
+file attributes only when deliberately mutating a copy, and dismount afterward.
+Converted-folder VHD/VHDX coverage remains separately labelled historical
+coverage. Never mount or modify original evidence for these tests.
 
 The native ZIP run also reported a `CannotFindDirectory` packaging warning for
 an original long directory after long-name relocation; all seven logged
